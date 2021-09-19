@@ -71,6 +71,7 @@ class CurrenciesFragment : Fragment(), CurrenciesAdapter.OnItemClickListener {
             binding.root.pb_loading.visibility = View.VISIBLE
             binding.root.btn_retry.visibility = View.GONE
             binding.rvRates.visibility = View.GONE
+            vm.getCurrencies()
         }
 
     }
