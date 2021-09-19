@@ -1,5 +1,9 @@
 package com.swensonhe.currencyconverter.network
 
-interface ApiEndpointInterface {
+import com.swensonhe.currencyconverter.data.Currencies
+import retrofit2.http.GET
 
+interface ApiEndpointInterface {
+    @GET("latest")
+    suspend fun getCurrencies(): Currencies
 }

@@ -3,11 +3,8 @@ package com.swensonhe.currencyconverter.di
 import android.content.Context
 import com.swensonhe.currencyconverter.network.ApiUrls
 import com.swensonhe.currencyconverter.network.ConnectivityInterceptor
-import com.swensonhe.currencyconverter.utils.UtilsHelper
 import okhttp3.Cache
-import okhttp3.Interceptor
 import okhttp3.OkHttpClient
-import okhttp3.Response
 import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
@@ -32,12 +29,15 @@ private fun getRetrofitClient(androidContext: Context) =
                 .hostnameVerifier { hostname, session -> true }
                 .addInterceptor(ConnectivityInterceptor(androidContext))
                 .addInterceptor { chain ->
-                    var request = chain.request()
-                    request = request.newBuilder()
-                        .build()
-                    chain.proceed(request)
+                    val request = chain.request().newBuilder()
+                    val originalHttpUrl = chain.request().url
+                    val url = originalHttpUrl.newBuilder()
+                        .addQueryParameter("access_key", ApiUrls.API_KEY)
+                        .addQueryParameter("base", "EUR").build()
+                    request.url(url)
+                    return@addInterceptor chain.proceed(request.build())
                 }
-                .addNetworkInterceptor(Interceptor { chain ->
+                /*.addNetworkInterceptor(Interceptor { chain ->
                     val originalResponse: Response = chain.proceed(chain.request())
                     if (UtilsHelper.isNetworkAvailable(androidContext)) {
                         val maxAge = 60 // read from cache for 1 minute
@@ -50,7 +50,7 @@ private fun getRetrofitClient(androidContext: Context) =
                             .header("Cache-Control", "public, only-if-cached, max-stale=$maxStale")
                             .build()
                     }
-                })
+                })*/
                 .addInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
                 .cache(Cache(File(androidContext.cacheDir, "okhttp_cache"), 10 * 1000 * 1000))
                 .build()
