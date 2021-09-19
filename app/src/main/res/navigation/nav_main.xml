@@ -18,5 +18,12 @@
         android:id="@+id/calculatorFragment"
         android:name="com.swensonhe.currencyconverter.ui.calculation.CalculatorFragment"
         android:label="fragment_calulator"
-        tools:layout="@layout/fragment_calulator" />
+        tools:layout="@layout/fragment_calulator">
+        <argument
+            android:name="currency"
+            app:argType="string" />
+        <argument
+            android:name="rate"
+            app:argType="float" />
+    </fragment>
 </navigation>

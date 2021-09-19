@@ -4,40 +4,36 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import com.swensonhe.currencyconverter.R
-import kotlinx.android.synthetic.main.fragment_currencies.*
+import com.swensonhe.currencyconverter.databinding.FragmentCurrenciesBinding
+import com.swensonhe.currencyconverter.utils.ScreenState
+import com.swensonhe.currencyconverter.utils.UtilsHelper.getFlag
+import kotlinx.android.synthetic.main.no_data_layout.view.*
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class CurrenciesFragment : Fragment(), CurrenciesAdapter.OnItemClickListener {
 
     private var currencies = ArrayList<Currency>()
     private var currenciesAdapter = CurrenciesAdapter()
-    private val flagOffset = 0x1F1E6
-    private val asciiOffset = 0x41
-    private val firstChar = Character.codePointAt("EUR", 0) - asciiOffset + flagOffset
-    private val secondChar = Character.codePointAt("EUR", 1) - asciiOffset + flagOffset
-
-    val flag = (String(Character.toChars(firstChar))
-            + String(Character.toChars(secondChar)))
-
-    companion object {
-        fun newInstance() = CurrenciesFragment()
-    }
-
     private val vm by viewModel<CurrenciesViewModel>()
+
+    private lateinit var binding: FragmentCurrenciesBinding
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_currencies, container, false)
+        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_currencies, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         vm.getCurrencies()
-        tv_header.text = "$flag EUR"
+        binding.tvHeader.text = getFlag("EUR") + " EUR"
         currenciesAdapter.setOnItemClickListener(this)
 
         vm.currencies.observe(viewLifecycleOwner, {
@@ -45,15 +41,47 @@ class CurrenciesFragment : Fragment(), CurrenciesAdapter.OnItemClickListener {
                 val currency = Currency(rate.key, rate.value)
                 currencies.add(currency)
             }
-            currenciesAdapter.submitList(currencies)
-            currenciesAdapter.notifyDataSetChanged()
+            if (currencies.isNotEmpty()) {
+                currenciesAdapter.submitList(currencies)
+                currenciesAdapter.notifyDataSetChanged()
+                binding.root.pb_loading.visibility = View.GONE
+                binding.root.btn_retry.visibility = View.GONE
+                binding.root.tv_no_data.visibility = View.GONE
+                binding.rvRates.visibility = View.VISIBLE
+            } else {
+                binding.root.pb_loading.visibility = View.GONE
+                binding.root.btn_retry.visibility = View.GONE
+                binding.rvRates.visibility = View.GONE
+                binding.root.tv_no_data.visibility = View.VISIBLE
+            }
+
         })
-        rv_rates.adapter = currenciesAdapter
+        binding.rvRates.adapter = currenciesAdapter
+
+        vm.mutableScreenState.observe(viewLifecycleOwner, {
+            when (it?.name) {
+                ScreenState.ERROR.name -> {
+                    binding.root.pb_loading.visibility = View.GONE
+                    binding.root.btn_retry.visibility = View.VISIBLE
+                }
+            }
+        })
+
+        binding.root.btn_retry.setOnClickListener {
+            binding.root.pb_loading.visibility = View.VISIBLE
+            binding.root.btn_retry.visibility = View.GONE
+            binding.rvRates.visibility = View.GONE
+        }
 
     }
 
     override fun onItemClicked(item: Currency) {
-
+        findNavController().navigate(
+            CurrenciesFragmentDirections.actionCurrenciesFragmentToCalculatorFragment(
+                item.name,
+                item.rate.toFloat()
+            )
+        )
     }
 
 

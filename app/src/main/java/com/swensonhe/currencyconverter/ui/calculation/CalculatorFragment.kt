@@ -4,29 +4,39 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.widget.addTextChangedListener
+import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.navArgs
 import com.swensonhe.currencyconverter.R
+import com.swensonhe.currencyconverter.databinding.FragmentCalulatorBinding
+import com.swensonhe.currencyconverter.utils.UtilsHelper.getFlag
 
 class CalculatorFragment : Fragment() {
 
-    companion object {
-        fun newInstance() = CalculatorFragment()
-    }
-
-    private lateinit var viewModel: CalulatorViewModel
+    private val args by navArgs<CalculatorFragmentArgs>()
+    private lateinit var binding: FragmentCalulatorBinding
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_calulator, container, false)
+        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_calulator, container, false)
+        return binding.root
     }
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        viewModel = ViewModelProvider(this).get(CalulatorViewModel::class.java)
-        // TODO: Use the ViewModel
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        binding.tvFromCurrency.text = getFlag("EUR")
+        binding.tvToCurrency.text = getFlag(args.currency)
+        binding.etAmount.addTextChangedListener {
+            if (it?.isNotEmpty()!!) {
+                val result = binding.etAmount.text?.toString()?.toDouble()!! * args.rate.toDouble()
+                binding.tvRate.text = result.toString()
+            } else
+                binding.tvRate.text = ""
+
+        }
     }
 
 }

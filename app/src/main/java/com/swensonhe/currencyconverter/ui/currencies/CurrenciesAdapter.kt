@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.swensonhe.currencyconverter.databinding.ItemCurrencyBinding
+import com.swensonhe.currencyconverter.utils.UtilsHelper.getFlag
 
 
 class CurrenciesAdapter :
@@ -42,18 +43,13 @@ class CurrenciesAdapter :
         binding: ItemCurrencyBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        private val flagOffset = 0x1F1E6
-        private val asciiOffset = 0x41
         fun bind(item: Currency, mListener: OnItemClickListener) {
-
-            val firstChar = Character.codePointAt(item.name, 0) - asciiOffset + flagOffset
-            val secondChar = Character.codePointAt(item.name, 1) - asciiOffset + flagOffset
-
-            val flag = (String(Character.toChars(firstChar))
-                    + String(Character.toChars(secondChar)))
             binding.currency = item
-            binding.tvCurrency.text = flag + " " + item.name
+            binding.tvCurrency.text = getFlag(item.name) + " " + item.name
             binding.tvRate.text = item.rate.toString()
+            binding.root.setOnClickListener {
+                mListener.onItemClicked(item)
+            }
             binding.executePendingBindings()
         }
 
